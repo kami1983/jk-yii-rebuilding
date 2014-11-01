@@ -52,18 +52,9 @@ class Controller extends CController
     }
     
     /**
-     * 像JKGLib 一样的view 方法调用视图，支持跨id 目录视图文件解析
-     * 支持JKTesting 测试系统接入。
-     * 
-     * @return array();
+     * 检查并设置自定义的view dir
      */
-    public function view($view,$data=null,$return=false){
-        
-//        static $_viewpath='';
-//        if('' == $_viewpath){
-//            $_viewpath= $this->_viewPath=$this->getBasePath(); //.DIRECTORY_SEPARATOR.'views';
-//        }
-        
+    private function _checkAndSetViewDir($view){
         $view_split= explode('/', $view);
         if(!isset($view_split[1]) || ''== $view_split[1] ){
             //解析其他目录视图
@@ -72,11 +63,43 @@ class Controller extends CController
             $view=$view_split[1];
             $this->_view_dir=$view_split[0]; //设置视图子目录，这样允许跨视图文件解析
         }
+        return $view;
+    }
+    
+    /**
+     * 像JKGLib 一样的view 方法调用视图，支持跨id 目录视图文件解析
+     * 支持JKTesting 测试系统接入。
+     * 
+     * @return array();
+     */
+    public function viewSingle($view,$data=null,$return=false){
+        
+        $view=$this->_checkAndSetViewDir($view);
+        
+        $result_arr= array_merge($data, array('content'=>parent::renderPartial($view, $data, $return),));        
+        if(false === $return){
+            echo $result_arr['content'];
+        }
+        
+        $this->_view_dir=''; //设置为空
+        return $result_arr;
+    }
+    
+    /**
+     * 像JKGLib 一样的view 方法调用视图，支持跨id 目录视图文件解析
+     * 支持JKTesting 测试系统接入。
+     * 
+     * @return array();
+     */
+    public function view($view,$data=null,$return=false){
+        
+        $view=$this->_checkAndSetViewDir($view);
         
         $result_arr= array_merge($data, array('content'=>parent::render($view, $data, $return),));        
         if(false === $return){
             echo $result_arr['content'];
         }
+        
         $this->_view_dir=''; //设置为空
         return $result_arr;
     }
